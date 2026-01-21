@@ -1,0 +1,25 @@
+# Build files (C++ / Geant4)
+build/
+*.o
+*.a
+*.dylib
+*.so
+*.exe
+cmake_install.cmake
+CMakeCache.txt
+Makefile
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+.pytest_cache/
+
+# System
+.DS_Store
+.vscode/
+.idea/
+
+# Large Data Files (Uncomment if data grows > 100MB)
+#data/*.csv 
