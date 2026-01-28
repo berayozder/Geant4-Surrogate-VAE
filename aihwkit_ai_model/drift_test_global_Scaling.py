@@ -153,6 +153,11 @@ sample_data = test_dataset[:][0]
 real_data_plot = np.mean(sample_data.numpy() * max_val, axis=0)
 plt.plot(real_data_plot, label='Geant4 (Ground Truth)', color='black', linewidth=3, linestyle='-')
 
+# --- DRIFT COMPENSATION LOOP ---
+
+# Reference baseline (energy level at t=0)
+# We assume we read this from "reference resistors" at the chip edge.
+baseline_energy = None 
 
 for i, t in enumerate(times):
     print(f"   Testing drift at {time_labels[i]}...")
@@ -169,9 +174,22 @@ for i, t in enumerate(times):
         fixed_noise = torch.randn(len(sample_data), 3) 
         output = model.decode(fixed_noise).numpy() * max_val
         
+        # --- COMPENSATION (NEW ADDITION) ---
+        current_energy = np.mean(output)
+        
+        if t == 0:
+            baseline_energy = current_energy # Save reference
+            corrected_output = output
+        else:
+            # Simple Scaling: If energy increased too much, reduce; if decreased, increase.
+            correction_factor = baseline_energy / current_energy
+            corrected_output = output * correction_factor
+            
+            print(f"     -> Drift Correction Factor: {correction_factor:.3f}")
+
     # 3. Add to Plot (plotting corrected data)
-    plt.plot(np.mean(output, axis=0), 
-             label=f'AI ({time_labels[i]})', 
+    plt.plot(np.mean(corrected_output, axis=0), 
+             label=f'Corrected AI ({time_labels[i]})', 
              color=colors[i], 
              linestyle='--', 
              alpha=0.8)
@@ -182,5 +200,5 @@ plt.ylabel('Energy Deposition [MeV]')
 plt.legend()
 plt.grid(True, linestyle=':', alpha=0.6)
 
-plt.savefig('./results/drift_analysis.png')
-print("✅ Drift analysis completed! Check 'drift_analysis.png'.")
+plt.savefig('./results/drift_analysis_global_scaling.png')
+print("✅ Drift analysis completed! Check 'drift_analysis_global_scaling.png'.")
