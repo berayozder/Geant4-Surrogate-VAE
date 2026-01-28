@@ -32,9 +32,15 @@ Instead of standard floating-point networks, the VAE was implemented using **Sim
 * **Hardware-Aware Training:** The model was trained with **noise injection** (read/write noise) to make it robust against physical device imperfections.
 
 ### 3. Drift Analysis & Compensation
-A critical study on **Conductance Drift** (the tendency of memristors to lose state over time) was conducted.
-* **Problem:** Without intervention, the model "hallucinates" massive energy spikes after 1 month of drift.
-* **Solution:** A **Global Scaling Compensation** algorithm was implemented, recovering signal fidelity by 80%.
+A critical study on **Conductance Drift** (the tendency of memristors to lose state over time) was conducted using a "Time Machine" simulation (t=1s to t=1 month).
+
+* **The "Spike" Phenomenon (Why does energy explode?):**
+    Normally, conductance decay implies signal loss. However, our results showed massive energy spikes (hallucinations) after 1 month.
+    > **Physics Explanation:** In a Neural Network, negative weights act as **"inhibitors" (brakes)**. As conductance drifts towards zero, these inhibitory connections weaken. The network effectively "loses its brakes," causing specific output nodes to fire uncontrollably.
+
+* **The Solution (Global Scaling Compensation):**
+    Since drift affects the physical array proportionally, the *relative* information between weights is preserved. We implemented a **Global Scaling** algorithm that measures the average energy shift and rescales the output.
+    > **Result:** This simple calibration recovered **80% of signal fidelity**, taming the hallucinations without needing expensive re-training.
 
 ## 📊 Results: Taming the Analog Noise
 
@@ -49,7 +55,7 @@ We simulated the physical aging of the chip over 1 month.
 
 | Before Compensation | After Compensation |
 | :---: | :---: |
-| ![Drift Bad](results/drift_analysis.png) | ![Drift Good](results/drift_analysis_corrected.png) |
+| ![Drift Bad](results/drift_analysis.png) | ![Drift Good](results/drift_analysis_global_scaling.png) |
 | *Huge spikes (hallucinations) due to drift.* | *Spikes tamed via Global Scaling algorithm.* |
 
 > **Insight:** The corrected model maintains valid physics reconstruction even after 1 month of retention time, proving the viability of analog hardware for scientific computing.
@@ -79,7 +85,8 @@ python without_aihwkit/ai_model/train_vae.py
 ### 2. Project Structure
 ```
 ├── aihwkit_ai_model/   # Analog AI (Memristor Simulation)
-│   ├── drift_test.py   # Drift analysis & compensation logic
+│   ├── drift_test.py   # Drift analysis
+│   ├── drift_test_global_scaling.py   # Drift analysis with compensation
 │   └── train_vae.py    # Hardware-aware training script
 ├── without_aihwkit/    # Standard Digital VAE
 ├── geant4_core/        # Physics simulation (C++)
