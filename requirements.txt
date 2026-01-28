@@ -3,3 +3,4 @@ pandas>=1.5.0
 numpy>=1.21.0
 matplotlib>=3.5.0
 seaborn>=0.12.0
+aihwkit>=0.9.0  # For analog in-memory computing simulation
